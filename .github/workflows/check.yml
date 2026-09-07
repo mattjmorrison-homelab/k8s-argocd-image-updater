@@ -9,7 +9,7 @@ jobs:
     runs-on: k8s-amd64
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-      - uses: mattjmorrison-homelab/actions-helm@73e6d2217352cf406eb45b6c917520f0e88071b2
+      - uses: mattjmorrison-homelab/actions-helm@501cabae5dc94b30fa8810e1a0d6a4aef6c853db
         with:
           namespace: argocd
           service-account: argocd-image-updater-ci
