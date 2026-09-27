@@ -14,6 +14,15 @@ spec:
           commonUpdateSettings:
             updateStrategy: "latest"
             pullSecret: "secret:argocd/argocd-image-updater-zot-creds#creds"
+            # Critical, not optional: "latest" with no filter considers
+            # every tag by creation time, tag name notwithstanding.
+            # app-backstage's CI pushes unmerged PRs to pr-<sha> tags in
+            # this same repository (build-once-then-retag-on-merge, see
+            # app-backstage#4) -- without this, an unreviewed PR's
+            # staging build could get deployed before it's ever
+            # promoted to a real merge-triggered tag.
+            ignoreTags:
+              - "pr-*"
           manifestTargets:
             helm:
               name: "backend.image.repository"
