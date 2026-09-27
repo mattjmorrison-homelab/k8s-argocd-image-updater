@@ -1,0 +1,20 @@
+apiVersion: argocd-image-updater.argoproj.io/v1alpha1
+kind: ImageUpdater
+metadata:
+  name: k8s-backstage
+  namespace: argocd
+spec:
+  writeBackConfig:
+    method: "argocd"
+  applicationRefs:
+    - namePattern: "k8s-backstage"
+      images:
+        - alias: "backstage"
+          imageName: "registry.morrisons.site/app-backstage:v0.0.0"
+          commonUpdateSettings:
+            updateStrategy: "latest"
+            pullSecret: "secret:argocd/argocd-image-updater-zot-creds#creds"
+          manifestTargets:
+            helm:
+              name: "backend.image.repository"
+              tag: "backend.image.tag"
