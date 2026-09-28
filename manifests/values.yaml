@@ -6,3 +6,72 @@ verify:
   image:
     repository: alpine
     digest: sha256:d9e853e87e55526f6b2917df91a2115c36dd7c696a35be12163d44e6e2a4b6bc # 3.20
+
+imageUpdaters:
+  # Shared across every ImageUpdater CR below unless an entry overrides it.
+  defaults:
+    writeBackMethod: "argocd"
+    pullSecret: "secret:argocd/argocd-image-updater-zot-creds#creds"
+    # Critical, not optional: "latest" with no filter considers every tag
+    # by creation time, tag name notwithstanding. Several of these repos'
+    # CI pushes unmerged PRs to pr-<sha> tags in the same registry repo
+    # (build-once-then-retag-on-merge, see app-backstage#4) -- without
+    # this, an unreviewed PR's staging build could get deployed before
+    # it's ever promoted to a real merge-triggered tag.
+    ignoreTags:
+      - "pr-*"
+
+  apps:
+    - name: k8s-backstage
+      namePattern: "k8s-backstage"
+      images:
+        - alias: "backstage"
+          imageName: "registry.morrisons.site/app-backstage:v0.0.0"
+          updateStrategy: "latest"
+          manifestTargets:
+            helm:
+              name: "backend.image.repository"
+              tag: "backend.image.tag"
+
+    - name: k8s-graphql-router
+      namePattern: "k8s-graphql-router"
+      images:
+        - alias: "graphql-router"
+          # Pinned to the "latest" tag with "digest" strategy, not "latest"
+          # (newest-tag) strategy like the other apps here — this image's
+          # content depends on the backend's live schema at build time, so
+          # rebuilding the same graph-router commit still needs to redeploy
+          # if the backend changed. digest strategy detects that under a
+          # reused tag; newest-tag strategy can't (confirmed: it silently
+          # missed a real content change and left a stale pod running).
+          imageName: "registry.morrisons.site/graph-router:latest"
+          updateStrategy: "digest"
+          manifestTargets:
+            helm:
+              name: "image.repository"
+              tag: "image.tag"
+
+    - name: homelab-hdmi-switch
+      namePattern: "k8s-hdmi-switch"
+      images:
+        - alias: "hdmi-switch-backend"
+          imageName: "registry.morrisons.site/graph-hdmi-switch:v0.0.0"
+          updateStrategy: "latest"
+          # This image is built arm64-only (deployed to pi5-8), not a
+          # multi-arch manifest. Image Updater defaults to querying
+          # linux/amd64 and silently ignores anything else, finding "no
+          # tags" for an image that's actually pushing fine — this is
+          # what tells it to look for the real platform instead.
+          platforms:
+            - "linux/arm64"
+          manifestTargets:
+            helm:
+              name: "backend.image.repository"
+              tag: "backend.image.tag"
+        - alias: "hdmi-switch-ui"
+          imageName: "registry.morrisons.site/ui-hdmi-switch:v0.0.0"
+          updateStrategy: "latest"
+          manifestTargets:
+            helm:
+              name: "ui.image.repository"
+              tag: "ui.image.tag"
