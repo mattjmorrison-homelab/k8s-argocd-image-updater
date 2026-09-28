@@ -1,0 +1,37 @@
+{{- $defaults := .Values.imageUpdaters.defaults }}
+{{- range .Values.imageUpdaters.apps }}
+{{- $app := . }}
+---
+apiVersion: argocd-image-updater.argoproj.io/v1alpha1
+kind: ImageUpdater
+metadata:
+  name: {{ $app.name }}
+  namespace: argocd
+spec:
+  writeBackConfig:
+    method: {{ $app.writeBackMethod | default $defaults.writeBackMethod | quote }}
+  applicationRefs:
+    - namePattern: {{ $app.namePattern | quote }}
+      images:
+        {{- range $app.images }}
+        - alias: {{ .alias | quote }}
+          imageName: {{ .imageName | quote }}
+          commonUpdateSettings:
+            updateStrategy: {{ .updateStrategy | quote }}
+            pullSecret: {{ .pullSecret | default $defaults.pullSecret | quote }}
+            ignoreTags:
+              {{- range (.ignoreTags | default $defaults.ignoreTags) }}
+              - {{ . | quote }}
+              {{- end }}
+            {{- if .platforms }}
+            platforms:
+              {{- range .platforms }}
+              - {{ . | quote }}
+              {{- end }}
+            {{- end }}
+          manifestTargets:
+            helm:
+              name: {{ .manifestTargets.helm.name | quote }}
+              tag: {{ .manifestTargets.helm.tag | quote }}
+        {{- end }}
+{{- end }}
