@@ -75,3 +75,21 @@ imageUpdaters:
             helm:
               name: "ui.image.repository"
               tag: "ui.image.tag"
+
+    - name: homelab-ad-reporter
+      namePattern: "k8s-ad-reporter"
+      images:
+        - alias: "ad-reporter-backend"
+          imageName: "registry.morrisons.site/graph-ad-reporter:v0.0.0"
+          updateStrategy: "latest"
+          manifestTargets:
+            helm:
+              name: "backend.image.repository"
+              tag: "backend.image.tag"
+        - alias: "ad-reporter-ui"
+          imageName: "registry.morrisons.site/ui-ad-reporter:v0.0.0"
+          updateStrategy: "latest"
+          manifestTargets:
+            helm:
+              name: "ui.image.repository"
+              tag: "ui.image.tag"
