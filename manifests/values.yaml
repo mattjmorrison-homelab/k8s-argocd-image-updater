@@ -93,3 +93,14 @@ imageUpdaters:
             helm:
               name: "ui.image.repository"
               tag: "ui.image.tag"
+
+    - name: homelab-claude
+      namePattern: "k8s-claude"
+      images:
+        - alias: "claude-backend"
+          imageName: "registry.morrisons.site/graph-claude:v0.0.0"
+          updateStrategy: "latest"
+          manifestTargets:
+            helm:
+              name: "backend.image.repository"
+              tag: "backend.image.tag"
